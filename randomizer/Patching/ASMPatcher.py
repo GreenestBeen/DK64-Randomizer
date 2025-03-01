@@ -2112,39 +2112,9 @@ def patchAssembly(ROM_COPY, spoiler):
         for index, value in enumerate(spoiler.arcade_order):
             writeValue(ROM_COPY, 0x8004A788 + index, Overlay.Arcade, value, offset_dict, 1)
 
-    # Jetpac Platforms
-    if settings.puzzle_rando_difficulty in (PuzzleRando.medium, PuzzleRando.hard, PuzzleRando.chaos):
-        # self.jetpac_platform_data = [
-        #     (0xC0, 0x30, 4),
-        #     (0x20, 0x48, 4),
-        #     (0x78, 0x60, 2),
-        # ]
-        # Move platforms
-        writeValue(ROM_COPY, 0x80028C5E, Overlay.Jetpac, settings.jetpac_platform_data[0][0], offset_dict)
-        writeValue(ROM_COPY, 0x80028C62, Overlay.Jetpac, settings.jetpac_platform_data[0][1], offset_dict)
-        writeValue(ROM_COPY, 0x80028C6A, Overlay.Jetpac, settings.jetpac_platform_data[0][2], offset_dict)
-        writeValue(ROM_COPY, 0x80028C7E, Overlay.Jetpac, settings.jetpac_platform_data[1][0], offset_dict)
-        writeValue(ROM_COPY, 0x80028C82, Overlay.Jetpac, settings.jetpac_platform_data[1][1], offset_dict)
-        writeValue(ROM_COPY, 0x80028C86, Overlay.Jetpac, settings.jetpac_platform_data[1][2], offset_dict)
-        writeValue(ROM_COPY, 0x80028CA6, Overlay.Jetpac, settings.jetpac_platform_data[2][0], offset_dict)
-        writeValue(ROM_COPY, 0x80028CAA, Overlay.Jetpac, settings.jetpac_platform_data[2][1], offset_dict)
-        writeValue(ROM_COPY, 0x80028CAE, Overlay.Jetpac, settings.jetpac_platform_data[2][2], offset_dict)
-        # Move Rocket segments
-        px_0 = settings.jetpac_platform_data[0][0]
-        py_0 = settings.jetpac_platform_data[0][1]
-        pw_0 = settings.jetpac_platform_data[0][2]
-        px_1 = settings.jetpac_platform_data[1][0]
-        py_1 = settings.jetpac_platform_data[1][1]
-        pw_1 = settings.jetpac_platform_data[1][2]
-        writeFloatUpper(ROM_COPY, 0x800276DA, Overlay.Jetpac, px_0 + (pw_0 * 4), offset_dict)
-        writeFloatUpper(ROM_COPY, 0x800276E2, Overlay.Jetpac, py_0 - 16, offset_dict)
-        writeFloatUpper(ROM_COPY, 0x800276EA, Overlay.Jetpac, px_1 + (pw_1 * 4), offset_dict)
-        writeFloatUpper(ROM_COPY, 0x800276F2, Overlay.Jetpac, py_1 - 16, offset_dict)
-
     writeHook(ROM_COPY, 0x805FE954, Overlay.Static, "ArcadeMapCheck", offset_dict)
     writeHook(ROM_COPY, 0x80024FD4, Overlay.Arcade, "ArcadeIntroCheck", offset_dict)
     writeFunction(ROM_COPY, 0x800288FC, Overlay.Jetpac, "completeJetpac", offset_dict)
-    writeFunction(ROM_COPY, 0x80024BD0, Overlay.Jetpac, "exitJetpac", offset_dict)
     if isQoLEnabled(spoiler, MiscChangesSelected.fast_picture_taking):
         # Fast Camera Photo
         writeValue(ROM_COPY, 0x80699454, Overlay.Static, 0x5000, offset_dict)  # Fast tick/no mega-slowdown on Biz

@@ -23,7 +23,6 @@ void exitJetpac(int map, int exit) {
 		ExitFromBonus();
 		return;
 	}
-	initiatetransition(map, exit);
 }
 
 void completeJetpac(void) {
