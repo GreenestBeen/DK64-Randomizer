@@ -29,6 +29,11 @@ def apply_kongrando_cosmetic(spoiler, ROM_COPY: LocalROM):
                 flag = 0
             else:
                 model = getModelFromItem(item, item_type, flag, x.shared)
+<<<<<<< HEAD
+=======
+            print(x.name)
+            print(item, item_type, flag)
+>>>>>>> c9f94839 (items on kongs progress)
             if model is not None:
                 spoiler.WriteKongPlacement(x.location, item, item_type, model, flag)
 
@@ -66,26 +71,49 @@ def apply_kongrando_cosmetic(spoiler, ROM_COPY: LocalROM):
                     {"index": 0x31, "new_type": gunswitches[japesPuzzleKong]},
                     {"index": 0x32, "new_type": gunswitches[japesPuzzleKong]},
                 ],
+<<<<<<< HEAD
+=======
+                "charspawner_changes": [{"type": Enemies.CutsceneDiddy, "new_type": Enemies.CharSpawnerItem}],
+>>>>>>> c9f94839 (items on kongs progress)
             },
             Maps.AztecLlamaTemple: {
                 "model2_changes": [
                     {"index": 0x16, "new_type": instrumentpads[llamaPuzzleKong]},
                     {"index": 0x12, "new_type": gunswitches[llamaPuzzleKong]},
                 ],
+<<<<<<< HEAD
+=======
+                "charspawner_changes": [{"type": Enemies.CutsceneLanky, "new_type": Enemies.CharSpawnerItem}],
+>>>>>>> c9f94839 (items on kongs progress)
             },
             Maps.AztecTinyTemple: {
                 "model2_changes": [
                     {"index": 0x14, "new_type": forceSwitches[tinyTemplePuzzleKong]}
                 ],
+<<<<<<< HEAD
+=======
+                "charspawner_changes": [{"type": Enemies.CutsceneTiny, "new_type": Enemies.CharSpawnerItem}],
+>>>>>>> c9f94839 (items on kongs progress)
             },
             Maps.FranticFactory: {
                 "map_index": 0x1A,
                 "model2_changes": [{"index": 0x24, "new_type": greenslamswitches[factoryPuzzleKong]}],
+<<<<<<< HEAD
             }
         }
         for kong_map in spoiler.shuffled_kong_placement.keys():
             ROM_COPY.seek(spoiler.settings.rom_data + spoiler.shuffled_kong_placement[kong_map]["puzzle"]["write"])
             ROM_COPY.writeMultipleBytes(spoiler.shuffled_kong_placement[kong_map]["puzzle"]["kong"], 1)
+=======
+                "charspawner_changes": [{"type": Enemies.CutsceneChunky, "new_type": Enemies.CharSpawnerItem}],
+            },
+        ]
+        for kong_map in spoiler.shuffled_kong_placement.keys():
+            for link_type in spoiler.shuffled_kong_placement[kong_map].keys():
+                if link_type != "locked":
+                    ROM_COPY.seek(spoiler.settings.rom_data + spoiler.shuffled_kong_placement[kong_map][link_type]["write"])
+                    ROM_COPY.writeMultipleBytes(spoiler.shuffled_kong_placement[kong_map][link_type]["kong"], 1)
+>>>>>>> c9f94839 (items on kongs progress)
 
         for cont_map_id in kongrando_changes:
             cont_map = kongrando_changes[cont_map_id]
