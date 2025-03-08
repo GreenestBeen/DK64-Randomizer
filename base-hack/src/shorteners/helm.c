@@ -132,7 +132,11 @@ void HelmBarrelCode(void) {
 	if (CurrentActorPointer_0->control_state == 0xC) {
 		if (paad->destroy_timer < 3) {
 			setFlag(HelmMinigameFlags[(int)paad->barrel_index],1,FLAGTYPE_TEMPORARY);
+<<<<<<< HEAD
 			setPermFlag(HelmMinigamePermFlags[(int)paad->barrel_index]);
+=======
+			setFlag(HelmMinigamePermFlags[(int)paad->barrel_index], 1, FLAGTYPE_PERMANENT);
+>>>>>>> d7aeea3a (Bonus/Boss win cons)
 			DisplayExplosionSprite();
 			deleteActorContainer(CurrentActorPointer_0);
 		}
