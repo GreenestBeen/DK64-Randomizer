@@ -3143,7 +3143,7 @@ def GenerateMultipathDict(
                     path_to_family = True
                     relevant_goal_locations.append(Locations(woth_loc))
                 # Determine path to the Bean if the Bean is the win condition.
-                if endpoint_item.type == Types.Bean and spoiler.settings.win_condition_item == WinConditionComplex.req_bean:
+                if endpoint_item.type == Types.Bean and spoiler.settings.win_condition_item == WinConditionComplex.bean_req:
                     path_to_bean = True
                     relevant_goal_locations.append(Locations(woth_loc))
                 if spoiler.settings.win_condition_item == WinConditionComplex.dk_rap_items:
