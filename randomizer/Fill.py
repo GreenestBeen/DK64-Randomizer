@@ -990,6 +990,24 @@ def IdentifyMajorItems(spoiler: Spoiler) -> List[Locations]:
             newFoolishItems = True
     return majorItems
 
+def ConstructAssumedKongs(spoiler: Spoiler, ordered_interesting_locations: List[Locations]) -> dict[Locations, List[Items]]:
+    kongsDict = {}
+    for loc in ordered_interesting_locations:
+        kongsDict[loc] = []
+    for kong in ItemPool.Kongs(spoiler.settings):
+        for locId in spoiler.LocationList.keys():
+            location = spoiler.LocationList[locId]
+            if location.item == kong:
+                location.item = None
+                spoiler.Reset()
+                accessible = GetAccessibleLocations(spoiler, [], SearchMode.GetReachable)
+                for woth_loc in ordered_interesting_locations:
+                    if woth_loc not in accessible:
+                        kongsDict[woth_loc].append(kong)
+                location.PlaceItem(spoiler, kong)
+    print (kongsDict)
+    return kongsDict
+
 
 def CalculateWothPaths(spoiler: Spoiler, WothLocations: List[Union[Locations, int]], MajorItems: List[Items]) -> None:
     """Calculate the Paths (dependencies) for each Way of the Hoard item."""
@@ -1065,6 +1083,7 @@ def CalculateWothPaths(spoiler: Spoiler, WothLocations: List[Union[Locations, in
     if spoiler.settings.win_condition_item == WinConditionComplex.beat_krool:
         for phase in spoiler.settings.krool_order:
             spoiler.krool_paths[phase] = []
+    assumedKongsDict = ConstructAssumedKongs(spoiler, ordered_interesting_locations)
     for locationId in ordered_interesting_locations:
         # Remove the item from the location
         location = spoiler.LocationList[locationId]
@@ -1073,7 +1092,7 @@ def CalculateWothPaths(spoiler: Spoiler, WothLocations: List[Union[Locations, in
         # We also need to assume Kongs in order to get a "pure" path instead of Kong paths being a subset of most later paths.
         # Anything locked behind a a Kong will then require everything that Kong requires.
         # This sort of defeats the purpose of paths, as it would put everything in a Kong's path into the path of many, many items.
-        assumedItems = ItemPool.Kongs(spoiler.settings)
+        assumedItems = assumedKongsDict[locationId]
         # Find all accessible locations without this item placed
         spoiler.Reset()
         accessible = GetAccessibleLocations(spoiler, assumedItems, SearchMode.GetReachable)
