@@ -24,7 +24,7 @@ import randomizer.LogicFiles.GloomyGalleon
 import randomizer.LogicFiles.HideoutHelm
 import randomizer.LogicFiles.JungleJapes
 import randomizer.LogicFiles.Shops
-from randomizer.Enums.Collectibles import Collectibles
+from randomizer.Enums.Collectibles_pb2 import Collectibles
 from randomizer.Enums.Events import Events
 from randomizer.Enums.Items import Items
 from randomizer.Enums.Kongs import Kongs
