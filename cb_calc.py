@@ -21,7 +21,7 @@ from randomizer.LogicFiles.GloomyGalleon import LogicRegions as GalleonLogic
 from randomizer.LogicFiles.JungleJapes import LogicRegions as JapesLogic
 
 # Enums galore
-from randomizer.Enums.Collectibles import Collectibles
+from randomizer.Enums.Collectibles_pb2 import Collectibles
 from randomizer.Enums.Events import Events
 from randomizer.Enums.Kongs import Kongs
 from randomizer.Enums.Locations import Locations
