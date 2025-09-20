@@ -103,12 +103,10 @@ async function setup_pyodide() {
             const url = window.location.origin;
             await pyodide.loadPackage(url + "/static/py_libraries/pyodide_importer-0.0.2-py2.py3-none-any.whl");
             await pyodide.loadPackage("pillow");
-            await pyodide.loadPackage("micropip");
-            const micropip = pyodide.pyimport("micropip");
-            await micropip.install("protobuf")
+            await pyodide.loadPackage("protobuf");
             if (location.hostname == "dev.dk64randomizer.com" || location.hostname == "dk64randomizer.com") {
-                // await pyodide.loadPackage("micropip");
-                // const micropip = pyodide.pyimport("micropip");
+                await pyodide.loadPackage("micropip");
+                const micropip = pyodide.pyimport("micropip");
                 await micropip.install(url + "/static/py_libraries/dk64rando-1.0.0-py3-none-any.whl");
             }
         }
