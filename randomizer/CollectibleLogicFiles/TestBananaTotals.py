@@ -7,7 +7,7 @@ import randomizer.CollectibleLogicFiles.FranticFactory as FranticFactory
 import randomizer.CollectibleLogicFiles.FungiForest as FungiForest
 import randomizer.CollectibleLogicFiles.GloomyGalleon as GloomyGalleon
 import randomizer.CollectibleLogicFiles.JungleJapes as JungleJapes
-from randomizer.Enums.Collectibles import Collectibles
+from randomizer.Enums.Collectibles_pb2 import Collectibles
 from randomizer.Enums.Kongs import Kongs
 from randomizer.Enums.Levels import Levels
 

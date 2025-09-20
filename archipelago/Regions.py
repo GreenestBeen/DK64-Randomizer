@@ -8,7 +8,7 @@ from worlds.AutoWorld import World
 
 from randomizer import Spoiler
 from randomizer import Settings
-from randomizer.Enums.Collectibles import Collectibles
+from randomizer.Enums.Collectibles_pb2 import Collectibles
 from randomizer.Enums.Events import Events
 from randomizer.Enums.Items import Items
 from randomizer.Enums.Kongs import Kongs

@@ -1,7 +1,7 @@
 # fmt: off
 """Collectible logic file for Angry Aztec."""
 
-from randomizer.Enums.Collectibles import Collectibles
+from randomizer.Enums.Collectibles_pb2 import Collectibles
 from randomizer.Enums.Events import Events
 from randomizer.Enums.Kongs import Kongs
 from randomizer.Enums.Levels import Levels

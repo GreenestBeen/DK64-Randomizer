@@ -12,7 +12,7 @@ from randomizer.Enums.Settings import DamageAmount
 from randomizer.Enums.Switches import Switches
 from randomizer.Enums.Time import Time
 from randomizer.Enums.Maps import Maps
-from randomizer.Enums.Collectibles import Collectibles
+from randomizer.Enums.Collectibles_pb2 import Collectibles
 
 FACTORY_LEDGE_COINS_HEIGHT = 178.5
 CAVES_WATER_HEIGHT = 20

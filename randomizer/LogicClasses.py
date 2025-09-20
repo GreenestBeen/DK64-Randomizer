@@ -13,7 +13,7 @@ from randomizer.Enums.HintRegion import HintRegion, HINT_REGION_PAIRING, MEDAL_R
 from randomizer.Lists.EnemyTypes import INSTRUMENT_RESTRICTED_REGIONS
 
 if TYPE_CHECKING:
-    from randomizer.Enums.Collectibles import Collectibles
+    from randomizer.Enums.Collectibles_pb2 import Collectibles
     from randomizer.Enums.Events import Events
     from randomizer.Enums.Locations import Locations
     from randomizer.Enums.MinigameType import MinigameType

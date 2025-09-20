@@ -20,7 +20,7 @@ import randomizer.Lists.CBLocations.DKIslesCBLocations
 import randomizer.Lists.Exceptions as Ex
 from randomizer.Enums.Kongs import Kongs
 from randomizer.Enums.Levels import Levels
-from randomizer.Enums.Collectibles import Collectibles
+from randomizer.Enums.Collectibles_pb2 import Collectibles
 from randomizer.LogicClasses import Collectible
 from randomizer.Patching.Library.Generic import IsItemSelected
 from randomizer.Lists.MapsAndExits import RegionMapList, LevelMapTable
