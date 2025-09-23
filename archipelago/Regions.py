@@ -271,7 +271,7 @@ def create_region(
     collectible_id = 0
     for collectible in collectibles:
         collectible_id += 1
-        location_name = region_name + " Collectible " + str(collectible_id) + ": " + collectible.kong.name + " " + collectible.type.name
+        location_name = region_name + " Collectible " + str(collectible_id) + ": " + collectible.kong.name + " " + Collectibles.name(collectible.type)
         location = DK64Location(player, location_name, None, new_region)
         # Quickly test and see if we can reach this location with zero items
         quick_success = False
