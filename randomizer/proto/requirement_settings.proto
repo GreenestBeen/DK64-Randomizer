@@ -1,9 +1,5 @@
 syntax = "proto3";
 
-package randomizer.proto;
-
-import "common/slam_level.proto";
-
 message BLockerOption {
     enum BLockerRando {
         B_LOCKER_RANDO_UNSPECIFIED = 0;
@@ -14,7 +10,7 @@ message BLockerOption {
         B_LOCKER_RANDO_CHAOS_B_LOCKERS = 5;
     }
 
-    BLockerRando opt = 1;
+    BLockerRando choice = 1;
 
     repeated int32 amounts = 2;
 
@@ -29,7 +25,7 @@ message TroffNScoffOption {
         TNS_RANDO_HARD_RANDOM = 3;
     }
 
-    TNSRando opt = 1;
+    TNSRando choice = 1;
 
     repeated int32 amounts = 2;
 
@@ -45,9 +41,9 @@ message MedalsForJetpac {
         MEDAL_REQ_RANDO_HARD_RANDOM = 4;
     }
 
-    MedalReqRando opt = 1;
+    MedalReqRando choice = 1;
 
-    optional int32 selected_quantity = 2;
+    optional int32 pre_selection = 2;
 }
 
 message PearlsForMermaid {
@@ -59,9 +55,9 @@ message PearlsForMermaid {
         PEARL_REQ_RANDO_HARD_RANDOM = 4;
     }
 
-    PearlReqRando opt = 1;
+    PearlReqRando choice = 1;
 
-    optional int32 selected_quantity = 2;
+    optional int32 pre_selection = 2;
 }
 
 message FairiesForFairyQueen {
@@ -73,9 +69,9 @@ message FairiesForFairyQueen {
         FAIRY_REQ_RANDO_HARD_RANDOM = 4;
     }
 
-    FairyReqRando opt = 1;
+    FairyReqRando choice = 1;
 
-    optional int32 selected_quantity = 2;
+    optional int32 pre_selection = 2;
 }
 
 message ColoredBananasForMedal {
@@ -88,15 +84,23 @@ message ColoredBananasForMedal {
         CB_REQ_RANDO_PROGRESSIVE = 5;
     }
 
-    CBReqRando opt = 1;
+    CBReqRando choice = 1;
 
-    optional int32 selected_quantity = 2;
+    optional int32 pre_selection = 2;
 }
 
 message ProgressiveSwitchStrength {
+    enum SlamLevel {
+        SLAM_LEVEL_UNSPECIFIED = 0;
+        SLAM_LEVEL_GREEN = 1;
+        SLAM_LEVEL_BLUE = 2;
+        SLAM_LEVEL_RED = 3;
+        SLAM_LEVEL_RANDOM = 4;
+    }
+
     bool enabled = 1;
 
-    repeated common.SlamLevel slam_levels = 2;
+    repeated SlamLevel slam_levels = 2;
 }
 
 message Switchsanity {
@@ -153,11 +157,6 @@ message Switchsanity {
         SWITCH_ITEM_LANKY = 21;
         SWITCH_ITEM_TINY = 22;
         SWITCH_ITEM_CHUNKY = 23;
-        SWITCH_ITEM_BONGOS_COCONUT = 24;
-        SWITCH_ITEM_GUITAR_PEANUT = 25;
-        SWITCH_ITEM_TROMBONE_GRAPE = 26;
-        SWITCH_ITEM_SAXOPHONE_FEATHER = 27;
-        SWITCH_ITEM_TRIANGLE_PINEAPPLE = 28;
     }
 
     message Switch {
