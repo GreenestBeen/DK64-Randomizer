@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package randomizer.proto;
+
 /* This message details all information about user-provided settings. 
  * Any settings here should be user-visible, or directly derived from user-visible options. 
  * If a setting should resolve to something random, that random result should be listed in SeedPatchingData, NOT here.
