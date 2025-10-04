@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package randomizer.proto;
+
 message BLockerOption {
     enum BLockerRando {
         B_LOCKER_RANDO_UNSPECIFIED = 0;
