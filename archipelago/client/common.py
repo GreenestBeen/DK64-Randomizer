@@ -5,7 +5,6 @@ import urllib.request
 import os
 import json
 import sys
-from ap_version import version as ap_version
 from Utils import get_settings
 
 
@@ -86,7 +85,7 @@ def create_task_log_exception(awaitable) -> asyncio.Task:
     return task
 
 
-def check_version():
+def check_version(ap_version : str):
     """Check for a new version of the DK64 Rando from GitHub releases."""
     try:
         from CommonClient import logger
