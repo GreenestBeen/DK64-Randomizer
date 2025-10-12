@@ -1299,7 +1299,7 @@ class LogicVarHolder:
 
     def CanFreeLanky(self):
         """Check if kong at Lanky location can be freed."""
-        return self.spoiler.LocationList[Locations.LankyKong].item == Items.NoItem or self.hasMoveSwitchsanity(Switches.AztecLlamaPuzzle)
+        return (self.spoiler.LocationList[Locations.LankyKong].item == Items.NoItem or self.hasMoveSwitchsanity(Switches.AztecLlamaPuzzle)) and self.swim
 
     def CanFreeChunky(self):
         """Check if kong at Chunky location can be freed."""
