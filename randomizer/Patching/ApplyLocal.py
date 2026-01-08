@@ -14,22 +14,8 @@ import js
 from randomizer.Enums.Models import Model, ModelNames, HeadResizeImmune
 from randomizer.Enums.Settings import RandomModels, BigHeadMode, ColorOptions
 from randomizer.Lists.Songs import ExcludedSongsSelector
-from randomizer.Patching.Cosmetics.TextRando import writeCrownNames
-from randomizer.Patching.Cosmetics.Holiday import applyHolidayMode
-from randomizer.Patching.Cosmetics.EnemyColors import writeMiscCosmeticChanges, writeRainbowAmmo
-from randomizer.Patching.CosmeticColors import (
-    apply_cosmetic_colors,
-    overwrite_object_colors,
-    darkenDPad,
-    darkenPauseBubble,
-)
-from randomizer.Patching.Hash import get_hash_images
-from randomizer.Patching.MusicRando import randomize_music
-from randomizer.Patching.Patcher import ROM
 from randomizer.Patching.Library.Generic import recalculatePointerJSON, camelCaseToWords, getHoliday, Holidays, IsColorOptionSelected
 from randomizer.Patching.Library.Assets import getPointerLocation, TableNames, writeText
-from randomizer.Patching.ASMPatcher import patchAssemblyCosmetic, disableDynamicReverb, fixLankyIncompatibility
-from randomizer.Patching.MirrorMode import truncateFiles
 
 # from randomizer.Spoiler import Spoiler
 from randomizer.Settings import Settings, ExcludedSongs, DPadDisplays, KongModels
@@ -110,245 +96,9 @@ async def patching_response(data, from_patch_gen=False, lanky_from_history=False
 
     curr_time = Datetime.now(timezone.utc)
     unix = time.mktime(curr_time.timetuple())
-    random.seed(int(unix))
-    split_version = version.split(".")
-    patch_major = split_version[0]
-    patch_minor = split_version[1]
-    patch_patch = split_version[2]
-    split_data = rando_version.split(".")
-    major = split_data[0]
-    minor = split_data[1]
-    patch = split_data[2]
 
-    ROM_COPY = ROM()
-    if major != patch_major or minor != patch_minor:
-        js.document.getElementById("patch_version_warning").hidden = False
-        js.document.getElementById("patch_warning_message").innerHTML = (
-            f"This patch was generated with version {patch_major}.{patch_minor}.{patch_patch} of the randomizer, but you are using version {major}.{minor}.{patch}. Cosmetic packs have been disabled for this patch."
-        )
-        fixLankyIncompatibility(ROM_COPY)
-    elif from_patch_gen is True:
-        sav = settings.rom_data
-        if from_patch_gen:
-            recalculatePointerJSON(ROM_COPY)
-        js.document.getElementById("patch_version_warning").hidden = True
-        # Disco DK
-        ROM_COPY.seek(settings.rom_data + 0x1B8 + 0)
-        dk_model_setting = int.from_bytes(ROM_COPY.readBytes(1), "big")  # 0 is default
-        if settings.disco_donkey and dk_model_setting == 0 and settings.override_cosmetics:
-            settings.kong_model_dk = KongModels.disco_donkey
-            ROM_COPY.seek(settings.rom_data + 0x1B8 + 0)
-            ROM_COPY.writeMultipleBytes(13, 1)
-            dest_start = getPointerLocation(TableNames.ActorGeometry, 3)
-            source_start = getPointerLocation(TableNames.ActorGeometry, 0x129)
-            source_end = getPointerLocation(TableNames.ActorGeometry, 0x129 + 1)
-            source_size = source_end - source_start
-            ROM_COPY.seek(source_start)
-            file_bytes = ROM_COPY.readBytes(source_size)
-            ROM_COPY.seek(dest_start)
-            ROM_COPY.writeBytes(file_bytes)
-            # Write uncompressed size
-            unc_table = getPointerLocation(TableNames.UncompressedFileSizes, TableNames.ActorGeometry)
-            ROM_COPY.seek(unc_table + (0x129 * 4))
-            unc_size = int.from_bytes(ROM_COPY.readBytes(4), "big")
-            ROM_COPY.seek(unc_table + (3 * 4))
-            ROM_COPY.writeMultipleBytes(unc_size, 4)
-        # Disco Chunky
-        ROM_COPY.seek(settings.rom_data + 0x1B8 + 4)
-        chunky_model_setting = int.from_bytes(ROM_COPY.readBytes(1), "big")  # 0 is default
-        if settings.disco_chunky and chunky_model_setting == 0 and settings.override_cosmetics:
-            settings.kong_model_chunky = KongModels.disco_chunky
-            ROM_COPY.seek(settings.rom_data + 0x1B8 + 4)
-            ROM_COPY.writeMultipleBytes(6, 1)
-            chunky_slots = [11, 12]
-            disco_slots = [0xD, 0xEC]
-            for model_slot in range(2):
-                dest_start = getPointerLocation(TableNames.ActorGeometry, chunky_slots[model_slot])
-                source_start = getPointerLocation(TableNames.ActorGeometry, disco_slots[model_slot])
-                source_end = getPointerLocation(TableNames.ActorGeometry, disco_slots[model_slot] + 1)
-                source_size = source_end - source_start
-                ROM_COPY.seek(source_start)
-                file_bytes = ROM_COPY.readBytes(source_size)
-                ROM_COPY.seek(dest_start)
-                ROM_COPY.writeBytes(file_bytes)
-                # Write uncompressed size
-                unc_table = getPointerLocation(TableNames.UncompressedFileSizes, TableNames.ActorGeometry)
-                ROM_COPY.seek(unc_table + (disco_slots[model_slot] * 4))
-                unc_size = int.from_bytes(ROM_COPY.readBytes(4), "big")
-                ROM_COPY.seek(unc_table + (chunky_slots[model_slot] * 4))
-                ROM_COPY.writeMultipleBytes(unc_size, 4)
-        # Fetch hash images before they're altered by cosmetic changes
-        loaded_hash = get_hash_images("browser", "hash")
-        apply_cosmetic_colors(settings, ROM_COPY)
+    spoiler = await apply_rom_patch(settings, spoiler, seed_id, version, from_patch_gen, unix, extracted_variables)
 
-        if settings.override_cosmetics:
-            overwrite_object_colors(settings, ROM_COPY)
-            writeMiscCosmeticChanges(settings, ROM_COPY)
-            writeRainbowAmmo(settings, ROM_COPY)
-            applyHolidayMode(settings, ROM_COPY)
-            darkenPauseBubble(settings, ROM_COPY)
-            if settings.misc_cosmetics:
-                writeCrownNames(ROM_COPY)
-
-            # Fog
-            holiday = getHoliday(settings)
-            fog_enabled = [0, 0, 0]  # 0 = Vanilla, 1 = Set to a default (defined by either holiday mode or a custom default), 2 = rando
-            default_colors = [
-                [0x8A, 0x52, 0x16],  # Aztec
-                [0x20, 0xFF, 0xFF],  # Caves
-                [0x40, 0x10, 0x10],  # Castle
-            ]
-            holiday_colors = {
-                Holidays.Anniv25: [0xFF, 0xFF, 0x00],
-                Holidays.Halloween: [0x80, 0x20, 0x20],
-                Holidays.Christmas: [0x00, 0xFF, 0xFF],
-            }
-            if holiday in holiday_colors:
-                fog_enabled = [1, 1, 1]
-                for x in range(3):
-                    default_colors[x] = holiday_colors[holiday]
-            elif IsColorOptionSelected(settings, ColorOptions.environment):
-                fog_enabled = [2, 1, 1]
-            for index, enabled_setting in enumerate(fog_enabled):
-                if enabled_setting != 0:
-                    color = default_colors[index]
-                    if enabled_setting == 2:
-                        color = []
-                        for x in range(3):
-                            color.append(random.randint(1, 0xFF))
-                    ROM_COPY.seek(sav + 0x088 + (index * 3))
-                    for x in color:
-                        ROM_COPY.writeMultipleBytes(x, 1)
-
-            # D-Pad Display
-            ROM_COPY.seek(sav + 0x139)
-            # The DPadDisplays enum is indexed to allow this.
-            ROM_COPY.write(int(settings.dpad_display))
-
-            if settings.dpad_display == DPadDisplays.on and settings.dark_mode_textboxes:
-                darkenDPad(ROM_COPY)
-
-            if settings.homebrew_header:
-                # Write ROM Header to assist some Mupen Emulators with recognizing that this has a 16K EEPROM
-                ROM_COPY.seek(0x3C)
-                CARTRIDGE_ID = "ED"
-                ROM_COPY.writeBytes(CARTRIDGE_ID.encode("ascii"))
-                ROM_COPY.seek(0x3F)
-                SAVE_TYPE = 2  # 16K EEPROM
-                ROM_COPY.writeMultipleBytes(SAVE_TYPE << 4, 1)
-
-            # Colorblind mode
-            ROM_COPY.seek(sav + 0x43)
-            # The ColorblindMode enum is indexed to allow this.
-            ROM_COPY.write(int(settings.colorblind_mode))
-
-            # Big head mode
-            ROM_COPY.seek(0x1FEE800)
-            setting_size = {
-                BigHeadMode.off: 0x00,
-                BigHeadMode.big: 0xFF,
-                BigHeadMode.small: 0x2F,
-                BigHeadMode.random: 0x00,
-            }
-            applied_sizes = []
-            tied_models = {
-                0x04: [0x5],  # DK
-                0x01: [0x2, 0x3],  # Diddy
-                0x06: [0x7, 0x8],  # Lanky
-                0x09: [0xA, 0xB],  # Tiny
-                0x0C: [0xD, 0xE, 0xF, 0x10],  # Chunky
-                0x19: [0x1A],  # Beaver
-                0x1D: [0x5E],
-            }
-            head_sizes = {}
-            for x in range(0xED):
-                value = setting_size.get(settings.big_head_mode, 0x00)
-                if settings.big_head_mode == BigHeadMode.random:
-                    value = random.choice([0x00, 0x2F, 0x2F, 0xFF, 0xFF])  # Make abnormal head sizes more likely than a normal head size
-                    # Check if model chosen is part of a tied model
-                    push_name = True
-                    if x == 0 or (x - 1) in HeadResizeImmune:
-                        push_name = False
-                    for m in tied_models:
-                        if x in tied_models[m]:
-                            value = applied_sizes[m]
-                            push_name = False
-                    if push_name:
-                        head_size_names = {
-                            0x00: "Normal",
-                            0x2F: "Small",
-                            0xFF: "Big",
-                        }
-                        head_sizes[ModelNames[x - 1]] = head_size_names.get(value, f"Unknown {hex(value)}")
-                applied_sizes.append(value)
-                ROM_COPY.write(value)
-
-            # Remaining Menu Settings
-            ROM_COPY.seek(sav + 0xC7)
-            ROM_COPY.write(int(settings.sound_type))  # Sound Type
-
-            boolean_props = [
-                BooleanProperties(settings.remove_water_oscillation, 0x10F),  # Remove Water Oscillation
-                BooleanProperties(settings.dark_mode_textboxes, 0x44),  # Dark Mode Text bubble
-                BooleanProperties(not settings.pause_hint_coloring, 0x1E4, 0),  # Pause Hint Coloring (inverted for Obiyo)
-                BooleanProperties(settings.camera_is_follow, 0xCB),  # Free/Follow Cam
-                BooleanProperties(settings.camera_is_not_inverted, 0xCC),  # Inverted/Non-Inverted Camera
-                BooleanProperties(settings.fps_display, 0x96),  # FPS Display
-                BooleanProperties(settings.song_speed_near_win, 0x1B4),  # Song Win Con Speedup
-                BooleanProperties(settings.disable_flavor_text, 0xAF),  # Disable Flavor Text
-                BooleanProperties(settings.rainbow_ammo, 0x112),  # Rainbow Ammo
-                BooleanProperties(settings.isles_cool_musical, 0x127),  # DK Isles always plays music
-                BooleanProperties(settings.pool_tracks, 0x50),  # Bonus Music
-                BooleanProperties(settings.pool_tracks, 0x51),  # Boss Music
-            ]
-
-            for prop in boolean_props:
-                if prop.check:
-                    ROM_COPY.seek(sav + prop.offset)
-                    ROM_COPY.write(prop.target)
-
-            # Excluded Songs
-            disabled_songs = settings.excluded_songs_selected.copy()
-            write_data = [0]
-            for item in ExcludedSongsSelector:
-                if ExcludedSongs[item["value"]] in disabled_songs and item["shift"] >= 0:
-                    offset = int(item["shift"] >> 3)
-                    check = int(item["shift"] % 8)
-                    write_data[offset] |= 0x80 >> check
-            ROM_COPY.seek(sav + 0x1B7)
-            ROM_COPY.writeMultipleBytes(write_data[0], 1)
-
-            music_data, music_names = randomize_music(settings, ROM_COPY)
-            patchAssemblyCosmetic(ROM_COPY, settings)
-            # Disable dynamic FXMix (reverb)
-            # If this impacts non-BGM music in a way that produces unwanted behavior, we'll want to only apply this to BGM
-            if settings.music_disable_reverb:
-                disableDynamicReverb(ROM_COPY)
-            music_text = []
-            accepted_characters = [*string.ascii_uppercase] + [" ", "\n", "(", ")", "%", ",", ".", "!", ">", ":", "'", "-", "&", ";"] + [*string.digits]
-            for name in music_names:
-                output_name = name
-                if name is None:
-                    output_name = ""
-                music_text.append([{"text": ["".join([x for x in [*output_name.upper()] if x in accepted_characters])]}])
-            if len(music_names) > 0:
-                writeText(ROM_COPY, 46, music_text)
-            if settings.show_song_name:
-                ROM_COPY.seek(sav + 0x1ED)
-                ROM_COPY.write(1)
-
-            truncateFiles(ROM_COPY)
-            spoiler = updateJSONCosmetics(spoiler, settings, music_data, int(unix), head_sizes)
-
-        # Apply Hash
-        order = 0
-        for count in json.loads(extracted_variables["hash"].decode("utf-8")):
-            js.document.getElementById("hashdiv").innerHTML = ""
-            # clear the innerHTML of the hash element
-            js.document.getElementById("hash" + str(order)).src = "data:image/jpeg;base64," + loaded_hash[count]
-            # Clear all the styles of the hash element
-            js.document.getElementById("hash" + str(order)).style.transform = "rotate(180deg)"
-            order += 1
     # if the hash is not set, just put the text in the spoiler log
     if js.document.getElementById("hash0").src == "":
         # insert a text div into the js.document.getElementById("hashdiv") and set the innerHTML to the No ROM loaded message add the div
@@ -376,12 +126,274 @@ async def patching_response(data, from_patch_gen=False, lanky_from_history=False
         js.document.getElementById("download_unlocked_spoiler_button").hidden = True
         js.document.getElementById("download_unlocked_spoiler_button").onclick = None
         js.document.getElementById("download_spoiler_button").hidden = False
-    if from_patch_gen is True:
-        ROM_COPY.fixSecurityValue()
-        ROM_COPY.save(f"dk64r-rom-{seed_id}.z64")
-        await ProgressBar().reset()
     js.jq("#nav-settings-tab").tab("show")
     js.check_seed_info_tab()
+
+
+async def apply_rom_patch(settings, spoiler, seed_id, version, from_patch_gen, unix, extracted_variables):
+    """Apply the ROM patch."""
+    from randomizer.Patching.Cosmetics.TextRando import writeCrownNames
+    from randomizer.Patching.Cosmetics.Holiday import applyHolidayMode
+    from randomizer.Patching.Cosmetics.EnemyColors import writeMiscCosmeticChanges, writeRainbowAmmo
+    from randomizer.Patching.CosmeticColors import (
+        apply_cosmetic_colors,
+        overwrite_object_colors,
+        darkenDPad,
+        darkenPauseBubble,
+    )
+    from randomizer.Patching.Hash import get_hash_images
+    from randomizer.Patching.MusicRando import randomize_music
+    from randomizer.Patching.Patcher import ROM
+    from randomizer.Patching.ASMPatcher import patchAssemblyCosmetic, disableDynamicReverb, fixLankyIncompatibility
+    from randomizer.Patching.MirrorMode import truncateFiles
+
+    random.seed(int(unix))
+    split_version = version.split(".")
+    patch_major = split_version[0]
+    patch_minor = split_version[1]
+    patch_patch = split_version[2]
+    split_data = rando_version.split(".")
+    major = split_data[0]
+    minor = split_data[1]
+    patch = split_data[2]
+
+    if (major != patch_major or minor != patch_minor) or from_patch_gen is True:
+        ROM_COPY = ROM()
+        if major != patch_major or minor != patch_minor:
+            js.document.getElementById("patch_version_warning").hidden = False
+            js.document.getElementById("patch_warning_message").innerHTML = (
+                f"This patch was generated with version {patch_major}.{patch_minor}.{patch_patch} of the randomizer, but you are using version {major}.{minor}.{patch}. Cosmetic packs have been disabled for this patch."
+            )
+            fixLankyIncompatibility(ROM_COPY)
+        elif from_patch_gen is True:
+            sav = settings.rom_data
+            if from_patch_gen:
+                recalculatePointerJSON(ROM_COPY)
+            js.document.getElementById("patch_version_warning").hidden = True
+            # Disco DK
+            ROM_COPY.seek(settings.rom_data + 0x1B8 + 0)
+            dk_model_setting = int.from_bytes(ROM_COPY.readBytes(1), "big")  # 0 is default
+            if settings.disco_donkey and dk_model_setting == 0 and settings.override_cosmetics:
+                settings.kong_model_dk = KongModels.disco_donkey
+                ROM_COPY.seek(settings.rom_data + 0x1B8 + 0)
+                ROM_COPY.writeMultipleBytes(13, 1)
+                dest_start = getPointerLocation(TableNames.ActorGeometry, 3)
+                source_start = getPointerLocation(TableNames.ActorGeometry, 0x129)
+                source_end = getPointerLocation(TableNames.ActorGeometry, 0x129 + 1)
+                source_size = source_end - source_start
+                ROM_COPY.seek(source_start)
+                file_bytes = ROM_COPY.readBytes(source_size)
+                ROM_COPY.seek(dest_start)
+                ROM_COPY.writeBytes(file_bytes)
+                # Write uncompressed size
+                unc_table = getPointerLocation(TableNames.UncompressedFileSizes, TableNames.ActorGeometry)
+                ROM_COPY.seek(unc_table + (0x129 * 4))
+                unc_size = int.from_bytes(ROM_COPY.readBytes(4), "big")
+                ROM_COPY.seek(unc_table + (3 * 4))
+                ROM_COPY.writeMultipleBytes(unc_size, 4)
+            # Disco Chunky
+            ROM_COPY.seek(settings.rom_data + 0x1B8 + 4)
+            chunky_model_setting = int.from_bytes(ROM_COPY.readBytes(1), "big")  # 0 is default
+            if settings.disco_chunky and chunky_model_setting == 0 and settings.override_cosmetics:
+                settings.kong_model_chunky = KongModels.disco_chunky
+                ROM_COPY.seek(settings.rom_data + 0x1B8 + 4)
+                ROM_COPY.writeMultipleBytes(6, 1)
+                chunky_slots = [11, 12]
+                disco_slots = [0xD, 0xEC]
+                for model_slot in range(2):
+                    dest_start = getPointerLocation(TableNames.ActorGeometry, chunky_slots[model_slot])
+                    source_start = getPointerLocation(TableNames.ActorGeometry, disco_slots[model_slot])
+                    source_end = getPointerLocation(TableNames.ActorGeometry, disco_slots[model_slot] + 1)
+                    source_size = source_end - source_start
+                    ROM_COPY.seek(source_start)
+                    file_bytes = ROM_COPY.readBytes(source_size)
+                    ROM_COPY.seek(dest_start)
+                    ROM_COPY.writeBytes(file_bytes)
+                    # Write uncompressed size
+                    unc_table = getPointerLocation(TableNames.UncompressedFileSizes, TableNames.ActorGeometry)
+                    ROM_COPY.seek(unc_table + (disco_slots[model_slot] * 4))
+                    unc_size = int.from_bytes(ROM_COPY.readBytes(4), "big")
+                    ROM_COPY.seek(unc_table + (chunky_slots[model_slot] * 4))
+                    ROM_COPY.writeMultipleBytes(unc_size, 4)
+            # Fetch hash images before they're altered by cosmetic changes
+            loaded_hash = get_hash_images("browser", "hash")
+            apply_cosmetic_colors(settings, ROM_COPY)
+
+            if settings.override_cosmetics:
+                overwrite_object_colors(settings, ROM_COPY)
+                writeMiscCosmeticChanges(settings, ROM_COPY)
+                writeRainbowAmmo(settings, ROM_COPY)
+                applyHolidayMode(settings, ROM_COPY)
+                darkenPauseBubble(settings, ROM_COPY)
+                if settings.misc_cosmetics:
+                    writeCrownNames(ROM_COPY)
+
+                # Fog
+                holiday = getHoliday(settings)
+                fog_enabled = [0, 0, 0]  # 0 = Vanilla, 1 = Set to a default (defined by either holiday mode or a custom default), 2 = rando
+                default_colors = [
+                    [0x8A, 0x52, 0x16],  # Aztec
+                    [0x20, 0xFF, 0xFF],  # Caves
+                    [0x40, 0x10, 0x10],  # Castle
+                ]
+                holiday_colors = {
+                    Holidays.Anniv25: [0xFF, 0xFF, 0x00],
+                    Holidays.Halloween: [0x80, 0x20, 0x20],
+                    Holidays.Christmas: [0x00, 0xFF, 0xFF],
+                }
+                if holiday in holiday_colors:
+                    fog_enabled = [1, 1, 1]
+                    for x in range(3):
+                        default_colors[x] = holiday_colors[holiday]
+                elif IsColorOptionSelected(settings, ColorOptions.environment):
+                    fog_enabled = [2, 1, 1]
+                for index, enabled_setting in enumerate(fog_enabled):
+                    if enabled_setting != 0:
+                        color = default_colors[index]
+                        if enabled_setting == 2:
+                            color = []
+                            for x in range(3):
+                                color.append(random.randint(1, 0xFF))
+                        ROM_COPY.seek(sav + 0x088 + (index * 3))
+                        for x in color:
+                            ROM_COPY.writeMultipleBytes(x, 1)
+
+                # D-Pad Display
+                ROM_COPY.seek(sav + 0x139)
+                # The DPadDisplays enum is indexed to allow this.
+                ROM_COPY.write(int(settings.dpad_display))
+
+                if settings.dpad_display == DPadDisplays.on and settings.dark_mode_textboxes:
+                    darkenDPad(ROM_COPY)
+
+                if settings.homebrew_header:
+                    # Write ROM Header to assist some Mupen Emulators with recognizing that this has a 16K EEPROM
+                    ROM_COPY.seek(0x3C)
+                    CARTRIDGE_ID = "ED"
+                    ROM_COPY.writeBytes(CARTRIDGE_ID.encode("ascii"))
+                    ROM_COPY.seek(0x3F)
+                    SAVE_TYPE = 2  # 16K EEPROM
+                    ROM_COPY.writeMultipleBytes(SAVE_TYPE << 4, 1)
+
+                # Colorblind mode
+                ROM_COPY.seek(sav + 0x43)
+                # The ColorblindMode enum is indexed to allow this.
+                ROM_COPY.write(int(settings.colorblind_mode))
+
+                # Big head mode
+                ROM_COPY.seek(0x1FEE800)
+                setting_size = {
+                    BigHeadMode.off: 0x00,
+                    BigHeadMode.big: 0xFF,
+                    BigHeadMode.small: 0x2F,
+                    BigHeadMode.random: 0x00,
+                }
+                applied_sizes = []
+                tied_models = {
+                    0x04: [0x5],  # DK
+                    0x01: [0x2, 0x3],  # Diddy
+                    0x06: [0x7, 0x8],  # Lanky
+                    0x09: [0xA, 0xB],  # Tiny
+                    0x0C: [0xD, 0xE, 0xF, 0x10],  # Chunky
+                    0x19: [0x1A],  # Beaver
+                    0x1D: [0x5E],
+                }
+                head_sizes = {}
+                for x in range(0xED):
+                    value = setting_size.get(settings.big_head_mode, 0x00)
+                    if settings.big_head_mode == BigHeadMode.random:
+                        value = random.choice([0x00, 0x2F, 0x2F, 0xFF, 0xFF])  # Make abnormal head sizes more likely than a normal head size
+                        # Check if model chosen is part of a tied model
+                        push_name = True
+                        if x == 0 or (x - 1) in HeadResizeImmune:
+                            push_name = False
+                        for m in tied_models:
+                            if x in tied_models[m]:
+                                value = applied_sizes[m]
+                                push_name = False
+                        if push_name:
+                            head_size_names = {
+                                0x00: "Normal",
+                                0x2F: "Small",
+                                0xFF: "Big",
+                            }
+                            head_sizes[ModelNames[x - 1]] = head_size_names.get(value, f"Unknown {hex(value)}")
+                    applied_sizes.append(value)
+                    ROM_COPY.write(value)
+
+                # Remaining Menu Settings
+                ROM_COPY.seek(sav + 0xC7)
+                ROM_COPY.write(int(settings.sound_type))  # Sound Type
+
+                boolean_props = [
+                    BooleanProperties(settings.remove_water_oscillation, 0x10F),  # Remove Water Oscillation
+                    BooleanProperties(settings.dark_mode_textboxes, 0x44),  # Dark Mode Text bubble
+                    BooleanProperties(not settings.pause_hint_coloring, 0x1E4, 0),  # Pause Hint Coloring (inverted for Obiyo)
+                    BooleanProperties(settings.camera_is_follow, 0xCB),  # Free/Follow Cam
+                    BooleanProperties(settings.camera_is_not_inverted, 0xCC),  # Inverted/Non-Inverted Camera
+                    BooleanProperties(settings.fps_display, 0x96),  # FPS Display
+                    BooleanProperties(settings.song_speed_near_win, 0x1B4),  # Song Win Con Speedup
+                    BooleanProperties(settings.disable_flavor_text, 0xAF),  # Disable Flavor Text
+                    BooleanProperties(settings.rainbow_ammo, 0x112),  # Rainbow Ammo
+                    BooleanProperties(settings.isles_cool_musical, 0x127),  # DK Isles always plays music
+                    BooleanProperties(settings.pool_tracks, 0x50),  # Bonus Music
+                    BooleanProperties(settings.pool_tracks, 0x51),  # Boss Music
+                ]
+
+                for prop in boolean_props:
+                    if prop.check:
+                        ROM_COPY.seek(sav + prop.offset)
+                        ROM_COPY.write(prop.target)
+
+                # Excluded Songs
+                disabled_songs = settings.excluded_songs_selected.copy()
+                write_data = [0]
+                for item in ExcludedSongsSelector:
+                    if ExcludedSongs[item["value"]] in disabled_songs and item["shift"] >= 0:
+                        offset = int(item["shift"] >> 3)
+                        check = int(item["shift"] % 8)
+                        write_data[offset] |= 0x80 >> check
+                ROM_COPY.seek(sav + 0x1B7)
+                ROM_COPY.writeMultipleBytes(write_data[0], 1)
+
+                music_data, music_names = randomize_music(settings, ROM_COPY)
+                patchAssemblyCosmetic(ROM_COPY, settings)
+                # Disable dynamic FXMix (reverb)
+                # If this impacts non-BGM music in a way that produces unwanted behavior, we'll want to only apply this to BGM
+                if settings.music_disable_reverb:
+                    disableDynamicReverb(ROM_COPY)
+                music_text = []
+                accepted_characters = [*string.ascii_uppercase] + [" ", "\n", "(", ")", "%", ",", ".", "!", ">", ":", "'", "-", "&", ";"] + [*string.digits]
+                for name in music_names:
+                    output_name = name
+                    if name is None:
+                        output_name = ""
+                    music_text.append([{"text": ["".join([x for x in [*output_name.upper()] if x in accepted_characters])]}])
+                if len(music_names) > 0:
+                    writeText(ROM_COPY, 46, music_text)
+                if settings.show_song_name:
+                    ROM_COPY.seek(sav + 0x1ED)
+                    ROM_COPY.write(1)
+
+                truncateFiles(ROM_COPY)
+                spoiler = updateJSONCosmetics(spoiler, settings, music_data, int(unix), head_sizes)
+
+            # Apply Hash
+            order = 0
+            for count in json.loads(extracted_variables["hash"].decode("utf-8")):
+                js.document.getElementById("hashdiv").innerHTML = ""
+                # clear the innerHTML of the hash element
+                js.document.getElementById("hash" + str(order)).src = "data:image/jpeg;base64," + loaded_hash[count]
+                # Clear all the styles of the hash element
+                js.document.getElementById("hash" + str(order)).style.transform = "rotate(180deg)"
+                order += 1
+            
+            if from_patch_gen is True:
+                ROM_COPY.fixSecurityValue()
+                ROM_COPY.save(f"dk64r-rom-{seed_id}.z64")
+                await ProgressBar().reset()
+
+    return spoiler
 
 
 def FormatSpoiler(value):
