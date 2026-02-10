@@ -187,7 +187,7 @@ if baseclasses_loaded:
     from worlds.LauncherComponents import Component, SuffixIdentifier, components, Type, icon_paths
     import randomizer.ShuffleExits as ShuffleExits
     from archipelago.FillSettings import fillsettings
-    from archipelago import Tracker
+    from archipelago.Prices import PriceGenerator
     from Utils import open_filename
     import shutil
     import zlib
@@ -697,49 +697,6 @@ if baseclasses_loaded:
                     raise FileNotFoundError("Invalid DK64 ROM file, please make sure your ROM is a vanilla DK64 file in big endian.")
             check_version()
 
-        def _get_slot_data(self):
-            """Get the slot data."""
-            return {
-                # "death_link": self.options.death_link.value,
-            }
-
-        def _restore_custom_location_names(self, custom_location_names: dict):
-            """Restore custom location names from slot data for UT regeneration."""
-            from randomizer.Lists.Location import LocationListOriginal as VanillaLocationList
-            from archipelago.Regions import BASE_ID
-
-            if not custom_location_names:
-                return
-
-            print(f"[DK64 UT] Restoring {len(custom_location_names)} custom location names")
-
-            # Build enum_to_index mapping
-            enum_to_index = {location: index for index, location in enumerate(VanillaLocationList)}
-            # Build reverse mapping: location_id -> location_enum
-            index_to_enum = {index: location for location, index in enum_to_index.items()}
-
-            restored_count = 0
-            sample_names = []
-            for loc_id_str, data in custom_location_names.items():
-                loc_id = int(loc_id_str)
-                # Calculate the enum from the location ID
-                index = loc_id - BASE_ID
-                if index in index_to_enum:
-                    location_enum = index_to_enum[index]
-                    if location_enum in self.spoiler.LocationList:
-                        # Restore the custom name
-                        if isinstance(data, dict) and "name" in data:
-                            new_name = data["name"]
-                            self.spoiler.LocationList[location_enum].name = new_name
-                            restored_count += 1
-                            if restored_count <= 5:
-                                sample_names.append(f"  {new_name}")
-
-            print(f"[DK64 UT] Restored {restored_count} names, samples:")
-            for name in sample_names:
-                print(name)
-
-
         def generate_early(self):
             """Generate the world."""
             # Check host setting for minimal logic and force glitchless if disabled
@@ -1073,7 +1030,10 @@ if baseclasses_loaded:
             else:
                 self.spoiler.settings.selected_shared_shops = set()
 
-            generate_prices(self.spoiler, self.options, self.random)
+            # Generate custom shop prices for Archipelago
+            price_generator = PriceGenerator(self.spoiler, self.options, self.random)
+            price_generator.generate_prices()
+
             # Handle Loading Zones - this will handle LO and (someday?) LZR appropriately
             if self.spoiler.settings.shuffle_loading_zones != ShuffleLoadingZones.none:
                 if self.spoiler.settings.level_randomization != LevelRandomization.loadingzone:

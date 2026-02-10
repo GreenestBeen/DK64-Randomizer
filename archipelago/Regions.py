@@ -311,42 +311,52 @@ def create_region(
                     case MinigameType.HelmBarrelSecond:
                         if logic_holder.settings.helm_room_bonus_count == 2:
                             add_rule(location, lambda state, player=player, location_logic=location_logic: canDoBonusBarrel(state, player, location_logic))
-
-            # Create bonus token location if needed
-            if logic_holder.settings.win_condition_item in (WinConditionComplex.req_bonuses, WinConditionComplex.krools_challenge):
-                should_create_token = False
-                match location_logic.bonusBarrel:
-                    case MinigameType.BonusBarrel:
-                        should_create_token = True
-                    case MinigameType.HelmBarrelFirst:
-                        if logic_holder.settings.helm_room_bonus_count > 0:
-                            should_create_token = True
-                    case MinigameType.HelmBarrelSecond:
-                        if logic_holder.settings.helm_room_bonus_count == 2:
-                            should_create_token = True
-
-                if should_create_token:
-                    token_location = DK64Location(player, location_obj.name + " Token", None, new_region)
-                    if minimal_logic:
-                        set_rule(token_location, lambda state: True)
-                    else:
-                        set_rule(
-                            token_location,
-                            lambda state, player=player, location_logic=location_logic: hasDK64RLocation(state, player, location_logic) and canDoBonusBarrel(state, player, location_logic),
-                        )
-                    token_location.place_locked_item(DK64Item("Bonus Completed", ItemClassification.progression_skip_balancing, None, player))
-                    new_region.locations.append(token_location)
-
-            # Apply item placement restrictions based on location type
-            match location_obj.type:
-                case Types.Key | Types.Crown:
-                    add_item_rule(location, lambda item: not (item.player == player and "Junk" in item.name))
-                case Types.Shop:
-                    add_item_rule(location, lambda item: not (item.player == player and item.name in ["Cranky", "Funky", "Candy", "Snide", "Rainbow Coin"]))
-                case Types.Fairy:
-                    add_item_rule(location, lambda item: not (item.player == player and "Blueprint" in item.name))
-
-            # Add boss defeated token if needed
+            # Handle token locations for bonus completion win conditions
+            # These need to be created even in minimal logic to support those win conditions
+            match location_logic.bonusBarrel:
+                case MinigameType.BonusBarrel:
+                    if logic_holder.settings.win_condition_item in (WinConditionComplex.req_bonuses, WinConditionComplex.krools_challenge):
+                        token_location = DK64Location(player, location_obj.name + " Token", None, new_region)
+                        if minimal_logic:
+                            set_rule(token_location, lambda state: True)
+                        else:
+                            set_rule(
+                                token_location,
+                                lambda state, player=player, location_logic=location_logic: hasDK64RLocation(state, player, location_logic) and canDoBonusBarrel(state, player, location_logic),
+                            )
+                        token_location.place_locked_item(DK64Item("Bonus Completed", ItemClassification.progression_skip_balancing, None, player))
+                        new_region.locations.append(token_location)
+                case MinigameType.HelmBarrelFirst:
+                    if logic_holder.settings.helm_room_bonus_count > 0 and logic_holder.settings.win_condition_item in (WinConditionComplex.req_bonuses, WinConditionComplex.krools_challenge):
+                        token_location = DK64Location(player, location_obj.name + " Token", None, new_region)
+                        if minimal_logic:
+                            set_rule(token_location, lambda state: True)
+                        else:
+                            set_rule(
+                                token_location,
+                                lambda state, player=player, location_logic=location_logic: hasDK64RLocation(state, player, location_logic) and canDoBonusBarrel(state, player, location_logic),
+                            )
+                        token_location.place_locked_item(DK64Item("Bonus Completed", ItemClassification.progression_skip_balancing, None, player))
+                        new_region.locations.append(token_location)
+                case MinigameType.HelmBarrelSecond:
+                    if logic_holder.settings.helm_room_bonus_count == 2 and logic_holder.settings.win_condition_item in (WinConditionComplex.req_bonuses, WinConditionComplex.krools_challenge):
+                        token_location = DK64Location(player, location_obj.name + " Token", None, new_region)
+                        if minimal_logic:
+                            set_rule(token_location, lambda state: True)
+                        else:
+                            set_rule(
+                                token_location,
+                                lambda state, player=player, location_logic=location_logic: hasDK64RLocation(state, player, location_logic) and canDoBonusBarrel(state, player, location_logic),
+                            )
+                        token_location.place_locked_item(DK64Item("Bonus Completed", ItemClassification.progression_skip_balancing, None, player))
+                        new_region.locations.append(token_location)
+            # Item placement limitations! These only apply to items in your own world, as other worlds' items will be AP items, and those can be anywhere.
+            # Bosses and Crowns cannot have Junk due to technical reasons
+            if location_obj.type in (Types.Key, Types.Crown):
+                add_item_rule(location, lambda item: not (item.player == player and "Junk" in item.name))
+            # Shops cannot have shopkeepers or Rainbow Coins due to technical issues
+            if location_obj.type == Types.Shop:
+                add_item_rule(location, lambda item: not (item.player == player and item.name in ["Cranky", "Funky", "Candy", "Snide", "Rainbow"]))
             if location_obj.type == Types.Key and logic_holder.settings.win_condition_item in (WinConditionComplex.req_bosses, WinConditionComplex.krools_challenge):
                 token_location = DK64Location(player, location_obj.name + " Token", None, new_region)
                 set_rule(token_location, lambda state, player=player, location_logic=location_logic: hasDK64RLocation(state, player, location_logic))
