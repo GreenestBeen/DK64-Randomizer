@@ -85,6 +85,7 @@ def writeCastleCannonEntrance(ROM_COPY: LocalROM, spoiler, map_id_override: int 
                 exit_id += 0x10000
             ROM_COPY.writeMultipleBytes(map_id, 2)
             ROM_COPY.writeMultipleBytes(exit_id & 0xFFFF, 2)
+            print("Written Lvl 7 entrance at ", hex(read_location + 8 - isles_cutscenes))
             break
         segment_index += 1
         count_copy -= 1
@@ -108,6 +109,7 @@ def writeCastleCannonEntrance(ROM_COPY: LocalROM, spoiler, map_id_override: int 
         else:
             read_location += 4
             count_copy += 1  # Not important cutscene
+    print("Exited while loop")
 
 def writeEntrance(ROM_COPY: LocalROM, spoiler, transition: Transitions, offset: int, vanilla_map: Maps, vanilla_exit: int):
     """Write LZREntrance struct to ROM."""
@@ -174,6 +176,7 @@ def randomize_entrances(spoiler, ROM_COPY: LocalROM):
         writeEntrance(ROM_COPY, spoiler, Transitions.AztecMainToRace, 0x5E, Maps.AztecTinyRace, 0)
         writeEntrance(ROM_COPY, spoiler, Transitions.GalleonLighthouseAreaToSickBay, 0x6A, Maps.GalleonSickBay, 0)
         writeEntrance(ROM_COPY, spoiler, Transitions.ForestMainToCarts, 0x6C, Maps.ForestMinecarts, 0)
+        writeEntrance(ROM_COPY, spoiler, Transitions.IslesMainToCastleLobby, 0x74, Maps.CreepyCastleLobby, 0)
         # Write Castle Lobby entrance
         writeCastleCannonEntrance(ROM_COPY, spoiler)
         # Everything else
@@ -196,6 +199,7 @@ def randomize_entrances(spoiler, ROM_COPY: LocalROM):
             Transitions.CastleToIsles,
             Transitions.HelmToIsles,
         ]
+        ROM_COPY.seek(varspaceOffset + 0x78)
         sym_maps = getSym("replacement_lobbies_array")
         sym_exits = getSym("replacement_lobby_exits_array")
         offset_dict = populateOverlayOffsets(ROM_COPY)

@@ -38,6 +38,35 @@ START:
 		lui $t6, multi_data_upper
 		//end of boot code
 		/////////////////////////////////////////////////////
+
+initHook:
+	J 	initCode
+	NOP
+
+getObjectArrayAddr:
+	// a0 = initial address
+	// a1 = common object size
+	// a2 = index
+	MULTU 	a1, a2
+	MFLO	a1
+	JR 		ra
+	ADD 	v0, a0, a1
+
+getFloatUpper:
+	; f12 = Float Value
+	mfc1 	$v0, $f12
+	sra 	$v0, $v0, 16
+	JR 		ra
+	andi 	$v0, $v0, 0xFFFF
+
+callFunc:
+	addi $sp, $sp, -8
+	sw $ra, 0x4 ($sp)
+	jalr $a0
+	or $a0, $a1, $zero
+	lw $ra, 0x4 ($sp)
+	jr $ra
+	addiu $sp, $sp, 8
 	
 .align 0x10
 END:
