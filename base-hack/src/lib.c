@@ -1160,53 +1160,30 @@ ROM_RODATA_NUM const sprite_data_struct halfmedal_sprite = {
 	},
 };
 
-ROM_RODATA_NUM const sprite_data_struct day_overlay_sprite = {
-	.unk0 = 0xCD,
-	.images_per_frame_horizontal = 1,
-	.images_per_frame_vertical = 1,
-	.codec = RGBA16,
-	.unk8 = -1,
-	.table = TABLE_25,
-	.width = 32,
-	.height = 32,
-	.image_count = 1,
-	.images = {
-		DAY_SPRITE_START,
-	},
-};
+void getMinGB(unsigned char *kong, unsigned char *level) {
+	int min_gb = 99999;
+	for (int i = 0; i < 5; i++) {
+		for (int j = 0; j < 9; j++) {
+			int att_gb = MovesBase[i].gb_count[j];
+			if (att_gb < min_gb) {
+				*kong = i;
+				*level = j;
+				min_gb = att_gb;
+			}
+		}
+	}
+}
 
-ROM_RODATA_NUM const sprite_data_struct night_overlay_sprite = {
-	.unk0 = 0xCE,
-	.images_per_frame_horizontal = 1,
-	.images_per_frame_vertical = 1,
-	.codec = RGBA16,
-	.unk8 = -1,
-	.table = TABLE_25,
-	.width = 32,
-	.height = 32,
-	.image_count = 1,
-	.images = {
-		NIGHT_SPRITE_START,
-	},
-};
-
-ROM_RODATA_NUM const sprite_data_struct ap_overlay_sprite = {
-	.unk0 = 0xCF,
-	.images_per_frame_horizontal = 1,
-	.images_per_frame_vertical = 1,
-	.codec = RGBA16,
-	.unk8 = -1,
-	.table = TABLE_25,
-	.width = 32,
-	.height = 32,
-	.image_count = 1,
-	.images = {
-		AP_SPRITE_START,
-	},
-};
-
-void giveGB() {
-	changeCollectableCount(8, 0, 1);
+void giveGB(int balanced_distribution) {
+	if (balanced_distribution) {
+		unsigned char min_kong = 0;
+		unsigned char min_level = 0;
+		getMinGB(&min_kong, &min_level);
+		MovesBase[(int)min_kong].gb_count[(int)min_level]++;
+		updateGBCountHUD(0);
+	} else {
+		changeCollectableCount(8, 0, 1);
+	}
 	displayItemOnHUD(8, 0, 0);
 }
 
