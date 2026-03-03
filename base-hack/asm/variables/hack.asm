@@ -22,7 +22,6 @@
 .definelabel StoredSettings, 0x807ED560
 .definelabel StoredCounterTextures, 0x807FFF30
 .definelabel PauseText, 0x807FFFE6
-.definelabel ShorterBosses, 0x807FFFE5
 .definelabel ForceStandardAmmo, 0x807FFFE4
 .definelabel KKOPhaseRandoOn, 0x807FFFE0
 .definelabel MultiBunchCount, 0x807FFFDE
@@ -36,7 +35,6 @@
 .definelabel APData, 0x807FFF1C
 .definelabel APName, 0x807E2EE0
 
-.definelabel KrushaSlot, 0x807FFF2E
 .definelabel KasplatSpawnBitfield, 0x807FFF2F
 .definelabel CrankyMoves_New, 0x807FF400
 .definelabel FunkyMoves_New, 0x807FF4F0
