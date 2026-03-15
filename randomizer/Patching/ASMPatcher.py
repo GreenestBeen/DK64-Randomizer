@@ -719,10 +719,57 @@ def patchAssembly(ROM_COPY: LocalROM, spoiler):
         0x164,  # BBlast first time cutscene
     ]
 
+    writeHook(ROM_COPY, 0x805FBDEC, Overlay.Static, "initCode", offset_dict)
+    writeValue(ROM_COPY, 0x8072E76C, Overlay.Static, 0x24070001, offset_dict, 4)
     writeValue(ROM_COPY, 0x8068ABEA, Overlay.Static, getHiSym("replacement_lobbies_array"), offset_dict)
     writeValue(ROM_COPY, 0x8068ABEE, Overlay.Static, getLoSym("replacement_lobbies_array"), offset_dict)
     writeValue(ROM_COPY, 0x8060005A, Overlay.Static, getHiSym("replacement_lobbies_array"), offset_dict)
     writeValue(ROM_COPY, 0x8060006E, Overlay.Static, getLoSym("replacement_lobbies_array"), offset_dict)
+
+    pause_screen_count = getEnum("PAUSESCREEN_TERMINATOR")
+    writeValue(ROM_COPY, 0x806A8672, Overlay.Static, pause_screen_count - 1, offset_dict)  # Screen decrease cap
+    writeValue(ROM_COPY, 0x806A8646, Overlay.Static, pause_screen_count, offset_dict)  # Screen increase cap
+
+    kong_model_setting_values = [
+        settings.kong_model_dk,
+        settings.kong_model_diddy,
+        settings.kong_model_lanky,
+        settings.kong_model_tiny,
+        settings.kong_model_chunky,
+    ]
+    name_mapping = {
+        KongModels.cranky: "cranky_name",
+        KongModels.funky: "funky_name",
+        KongModels.krool_cutscene: "krool_name",
+        KongModels.krool_fight: "krool_name",
+        KongModels.candy: "candy_name",
+        KongModels.robokrem: "robokrem_name",
+    }
+    index_mapping = {
+        KongModels.cranky: 8,
+        KongModels.funky: 10,
+        KongModels.krool_cutscene: 7,
+        KongModels.krool_fight: 7,
+        KongModels.candy: 9,
+        KongModels.robokrem: 11,
+    }
+    for kong_index, value in enumerate(kong_model_setting_values):
+        if value in (KongModels.cranky, KongModels.candy, KongModels.funky, KongModels.robokrem):
+            writeValue(ROM_COPY, 0x8075C410 + (kong_index * 0x10) + 0xC, Overlay.Static, 0, offset_dict, 4)
+            writeValue(ROM_COPY, 0x80619168, Overlay.Static, 0, offset_dict, 4)
+        if value in name_mapping:
+            writeLabelValue(ROM_COPY, 0x8074E780 + (4 * kong_index), Overlay.Static, name_mapping[value], offset_dict)
+        if value in index_mapping:
+            writeValue(ROM_COPY, 0x8074E85C + (4 * kong_index), Overlay.Static, index_mapping[value], offset_dict, 4)
+
+    if settings.arcade_custom_minigame is not None:
+        loadBin(ROM_COPY, 0x80024390, Overlay.Arcade, f"base-hack/minigame/{settings.arcade_custom_minigame}.bin", offset_dict)
+        writeFunction(ROM_COPY, 0x800242FC, Overlay.Arcade, f"{settings.arcade_custom_minigame}.loop", offset_dict, "minigames")
+    if settings.jetpac_custom_minigame is not None:
+        loadBin(ROM_COPY, 0x80024390, Overlay.Jetpac, f"base-hack/minigame/{settings.jetpac_custom_minigame}.bin", offset_dict)
+        writeFunction(ROM_COPY, 0x8002433C, Overlay.Jetpac, f"{settings.jetpac_custom_minigame}.loop", offset_dict, "minigames")
+    writeHook(ROM_COPY, 0x8073A544, Overlay.Static, "LogPercussion", offset_dict)
+    writeHook(ROM_COPY, 0x8073543C, Overlay.Static, "InstIndexStore", offset_dict)
 
     ACTOR_DEF_START = getSym("actor_defs")
     ACTOR_MASTER_TYPE_START = getSym("actor_master_types")

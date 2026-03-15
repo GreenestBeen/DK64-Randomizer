@@ -47,9 +47,25 @@ void sendTrap(ICE_TRAP_TYPES trap_type) {
 }
 
 void handleSentItem(void) {
-    archipelago_items FedItem = ap_info.fed_item;
-    switch (FedItem) {
-        case TRANSFER_ITEM_GB:
+    // New generic packet-based approach
+    // Python sends an ap_item_packet struct with all giveItem parameters
+    ap_item_packet *packet = (ap_item_packet*)&ap_info.fed_item;
+    
+    // Unpack config flags into giveItemConfig struct
+    giveItemConfig config = {
+        .display_item_text = (packet->config_flags & 0x01) ? 1 : 0,
+        .apply_helm_hurry = (packet->config_flags & 0x02) ? 1 : 0,
+        .give_coins = (packet->config_flags & 0x04) ? 1 : 0,
+        .apply_ice_trap = (packet->config_flags & 0x08) ? 1 : 0,
+        .force_display_item_text = (packet->config_flags & 0x10) ? 1 : 0,
+    };
+    
+    // Special handling for certain item types
+    requirement_item item_type = (requirement_item)packet->item_type;
+    
+    switch (item_type) {
+        case REQITEM_GOLDENBANANA:
+            // GB has its own function
             giveGB(1);
             break;
         case REQITEM_ICETRAP:

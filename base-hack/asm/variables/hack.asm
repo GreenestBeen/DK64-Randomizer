@@ -15,11 +15,9 @@
 .definelabel CCEffectData, 0x807FFFB4 // 0x4
 .definelabel ItemInventory, 0x807FFFB8 // 0x4
 .definelabel PauseSlot3TextPointer, 0x807FFFBC // ptr
-.definelabel style2Mtx, 0x807FFF90
 .definelabel style6Mtx, 0x807FFF70
 .definelabel style128Mtx, 0x807FFF50
-.definelabel StoredSettings, 0x807ED560
-.definelabel StoredCounterTextures, 0x807FFF30
+.definelabel PercussionPlayed, 0x807FFF30 // u8
 .definelabel PauseText, 0x807FFFE6
 .definelabel ForceStandardAmmo, 0x807FFFE4
 .definelabel KKOPhaseRandoOn, 0x807FFFE0

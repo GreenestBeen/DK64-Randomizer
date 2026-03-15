@@ -47,7 +47,6 @@
 .importobj "obj/src_misc_warp_to_isles.o"
 .importobj "obj/src_misc_win_condition.o"
 .importobj "obj/src_misc_music_text.o"
-.importobj "obj/src_misc_shop_indicator.o"
 .importobj "obj/src_misc_enemy_drop_table.o"
 .importobj "obj/src_misc_shop_indicator.o"
 .importobj "obj/src_misc_file_screen.o"

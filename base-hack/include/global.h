@@ -270,10 +270,6 @@ extern void initHintFlags(void);
 
 extern void initTextChanges(void);
 extern void giveGB(int balanced_distribution);
-extern void giveAmmo(void);
-extern void giveOrange(void);
-extern void giveMelon(void);
-extern void giveCrystal(void);
 extern int inShortList(const int target, const short* list, const int count);
 extern int inU8List(const int target, const unsigned char* list, const int count);
 

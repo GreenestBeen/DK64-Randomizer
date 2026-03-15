@@ -1160,6 +1160,51 @@ ROM_RODATA_NUM const sprite_data_struct halfmedal_sprite = {
 	},
 };
 
+ROM_RODATA_NUM const sprite_data_struct day_overlay_sprite = {
+	.unk0 = 0xCD,
+	.images_per_frame_horizontal = 1,
+	.images_per_frame_vertical = 1,
+	.codec = RGBA16,
+	.unk8 = -1,
+	.table = TABLE_25,
+	.width = 32,
+	.height = 32,
+	.image_count = 1,
+	.images = {
+		DAY_SPRITE_START,
+	},
+};
+
+ROM_RODATA_NUM const sprite_data_struct night_overlay_sprite = {
+	.unk0 = 0xCE,
+	.images_per_frame_horizontal = 1,
+	.images_per_frame_vertical = 1,
+	.codec = RGBA16,
+	.unk8 = -1,
+	.table = TABLE_25,
+	.width = 32,
+	.height = 32,
+	.image_count = 1,
+	.images = {
+		NIGHT_SPRITE_START,
+	},
+};
+
+ROM_RODATA_NUM const sprite_data_struct ap_overlay_sprite = {
+	.unk0 = 0xCF,
+	.images_per_frame_horizontal = 1,
+	.images_per_frame_vertical = 1,
+	.codec = RGBA16,
+	.unk8 = -1,
+	.table = TABLE_25,
+	.width = 32,
+	.height = 32,
+	.image_count = 1,
+	.images = {
+		AP_SPRITE_START,
+	},
+};
+
 short *getMinGB(void) {
 	short *loc = &MovesBase[0].gb_count[0];
 	int min_gb = 99999;
